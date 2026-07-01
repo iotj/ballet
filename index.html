@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f0a1e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>발레체크 — 자세 분석</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <h1>🩰 발레체크</h1>
+    <p class="subtitle">AI 자세 분석 — 턴아웃 · 플리에 · 아라베스크</p>
+  </header>
+
+  <main>
+
+    <!-- ① 포즈 선택 -->
+    <section id="pose-select">
+      <p class="section-label">동작 선택</p>
+      <div class="pose-cards" id="pose-cards"></div>
+
+      <!-- ② 입력 방식 -->
+      <div id="input-select">
+        <p class="section-label">입력 방식</p>
+        <div class="input-buttons">
+          <button class="btn primary" id="btn-webcam">📹 실시간 카메라</button>
+          <label class="btn" id="btn-upload-label">
+            🖼️ 사진 업로드
+            <input type="file" id="file-input" accept="image/*" hidden />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ③ 분석 화면 -->
+    <section id="analysis-view">
+
+      <div class="video-wrap">
+        <video id="webcam" autoplay playsinline muted></video>
+        <img id="uploaded-img" alt="업로드 사진" />
+        <canvas id="overlay"></canvas>
+
+        <div class="video-controls">
+          <button class="btn icon-btn" id="btn-flip" title="카메라 전환">🔄</button>
+          <button class="btn icon-btn danger" id="btn-close" title="닫기">✕</button>
+        </div>
+        <div class="notice" id="lm-notice"></div>
+      </div>
+
+      <!-- 피드백 패널 -->
+      <div id="feedback-panel">
+        <p id="feedback-empty">자세를 취하면 자동으로 분석합니다.</p>
+      </div>
+
+      <!-- 하단 액션 -->
+      <div id="action-bar">
+        <button class="btn" id="btn-save">💾 결과 저장</button>
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+<!-- 로딩 오버레이 -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p id="loading-msg">MediaPipe 초기화 중...</p>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
