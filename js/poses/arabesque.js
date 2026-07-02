@@ -100,15 +100,13 @@ export default {
       comments: {
         '다리 높이': legStatus === 'pass'
           ? `후면 다리 ${Math.round(legAngle)}°로 훌륭한 아라베스크입니다.`
-          : legStatus === 'warn'
-          ? `후면 다리 ${Math.round(legAngle)}°입니다. 골반을 정면으로 유지하며 조금 더 올려보세요.`
-          : `후면 다리 ${Math.round(legAngle)}°입니다. 지지발 무릎을 살짝 굽혀 균형을 잡고 다리를 들어올리세요.`,
+          : `후면 다리 ${Math.round(legAngle)}°입니다. 엉덩이 근육을 조이며 허벅지 뒤쪽으로 다리를 밀어 올리세요.`,
         '골반 수평': hipStatus === 'pass'
           ? '골반이 수평으로 잘 유지되고 있습니다.'
-          : `골반이 ${Math.round(hipHorizontalDiff)}° 기울어져 있습니다. 양쪽 골반 높이를 같게 유지하세요.`,
+          : '복사근(옆구리)에 힘을 주고 올라간 골반을 눌러 내리듯 의식하며 다리를 드세요.',
         '상체 경사': trunkStatus === 'pass'
           ? '상체가 바르게 유지되고 있습니다.'
-          : `상체가 앞으로 ${Math.round(trunkAngle)}° 기울어져 있습니다. 시선을 앞으로 두고 상체를 세워주세요.`
+          : '복부를 당기고 등 근육으로 상체를 잡아주세요.'
       },
       status: {
         '다리 높이': legStatus,

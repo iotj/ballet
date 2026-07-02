@@ -55,13 +55,11 @@ export default {
 
     const turnoutComment = turnoutStatus === 'pass'
       ? `양발 외회전 ${Math.round(normalizedTurnout)}°로 훌륭합니다.`
-      : turnoutStatus === 'warn'
-      ? `양발 외회전 ${Math.round(normalizedTurnout)}°입니다. 고관절 유연성을 늘려보세요.`
-      : `양발 외회전 ${Math.round(normalizedTurnout)}°입니다. 무리하지 말고 점진적으로 늘리세요.`
+      : `양발 외회전 ${Math.round(normalizedTurnout)}°입니다. 엉덩이 옆 근육으로 무릎을 새끼발가락 방향으로 밀어주세요.`
 
     const alignComment = alignStatus === 'pass'
       ? '무릎이 발끝 방향으로 잘 정렬되어 있습니다.'
-      : '무릎이 발끝 방향과 어긋나 있습니다. 무릎을 발끝 방향으로 밀어주세요.'
+      : '엉덩이 옆 근육(외회전근)으로 무릎을 발끝 방향으로 열어주세요. 발만 억지로 벌리면 부상이 생깁니다.'
 
     return {
       scores:   { '외회전 각도': turnoutScore, '무릎 정렬': alignScore },
