@@ -4,9 +4,80 @@ import { startCamera, stopCamera, toggleFacing, loadImageFile } from './camera.j
 import { drawOverlay, syncCanvasSize, clearOverlay } from './overlay.js'
 
 const POSE_META = {
-  turnout:   { icon: '🦢', hint: '정면 촬영' },
-  arabesque: { icon: '🩰', hint: '측면 촬영' },
-  plie:      { icon: '🧘', hint: '정면 촬영' }
+  turnout: {
+    icon: '🦢',
+    hint: '정면 촬영',
+    svg: `<svg viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg" fill="#c8a4c8">
+      <!-- 머리 -->
+      <circle cx="40" cy="12" r="7"/>
+      <!-- 목 -->
+      <rect x="37" y="19" width="6" height="8" rx="2"/>
+      <!-- 몸통 -->
+      <rect x="30" y="27" width="20" height="28" rx="4"/>
+      <!-- 왼팔 -->
+      <line x1="30" y1="32" x2="12" y2="44" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 오른팔 -->
+      <line x1="50" y1="32" x2="68" y2="44" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 왼다리 (바깥쪽 벌림) -->
+      <line x1="35" y1="55" x2="18" y2="85" stroke="#c8a4c8" stroke-width="5" stroke-linecap="round"/>
+      <!-- 오른다리 (바깥쪽 벌림) -->
+      <line x1="45" y1="55" x2="62" y2="85" stroke="#c8a4c8" stroke-width="5" stroke-linecap="round"/>
+      <!-- 왼발 (외회전, 왼쪽 방향) -->
+      <line x1="18" y1="85" x2="6" y2="90" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 오른발 (외회전, 오른쪽 방향) -->
+      <line x1="62" y1="85" x2="74" y2="90" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+    </svg>`
+  },
+  plie: {
+    icon: '🧘',
+    hint: '정면 촬영',
+    svg: `<svg viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg" fill="#c8a4c8">
+      <!-- 머리 -->
+      <circle cx="40" cy="10" r="7"/>
+      <!-- 목 -->
+      <rect x="37" y="17" width="6" height="7" rx="2"/>
+      <!-- 몸통 (수직 유지) -->
+      <rect x="30" y="24" width="20" height="24" rx="4"/>
+      <!-- 왼팔 -->
+      <line x1="30" y1="29" x2="14" y2="42" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 오른팔 -->
+      <line x1="50" y1="29" x2="66" y2="42" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 왼허벅지 (굽힌 무릎, 바깥쪽으로) -->
+      <line x1="35" y1="48" x2="18" y2="72" stroke="#c8a4c8" stroke-width="5" stroke-linecap="round"/>
+      <!-- 오른허벅지 -->
+      <line x1="45" y1="48" x2="62" y2="72" stroke="#c8a4c8" stroke-width="5" stroke-linecap="round"/>
+      <!-- 왼종아리 (무릎 굽힘) -->
+      <line x1="18" y1="72" x2="14" y2="100" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 오른종아리 -->
+      <line x1="62" y1="72" x2="66" y2="100" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 왼발 -->
+      <line x1="14" y1="100" x2="4" y2="105" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 오른발 -->
+      <line x1="66" y1="100" x2="76" y2="105" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+    </svg>`
+  },
+  arabesque: {
+    icon: '🩰',
+    hint: '측면 촬영',
+    svg: `<svg viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg" fill="#c8a4c8">
+      <!-- 머리 -->
+      <circle cx="22" cy="10" r="7"/>
+      <!-- 목 -->
+      <rect x="19" y="17" width="6" height="6" rx="2"/>
+      <!-- 상체 (약간 앞으로 기울어짐) -->
+      <line x1="22" y1="23" x2="28" y2="52" stroke="#c8a4c8" stroke-width="6" stroke-linecap="round"/>
+      <!-- 앞으로 뻗은 팔 -->
+      <line x1="22" y1="30" x2="4" y2="36" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 뒤로 뻗은 팔 -->
+      <line x1="26" y1="32" x2="42" y2="38" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 지지발 다리 (수직) -->
+      <line x1="28" y1="52" x2="28" y2="105" stroke="#c8a4c8" stroke-width="5" stroke-linecap="round"/>
+      <!-- 지지발 발바닥 -->
+      <line x1="20" y1="105" x2="36" y2="105" stroke="#c8a4c8" stroke-width="4" stroke-linecap="round"/>
+      <!-- 후면 다리 (높이 들어올림) -->
+      <line x1="28" y1="60" x2="70" y2="38" stroke="#c8a4c8" stroke-width="5" stroke-linecap="round"/>
+    </svg>`
+  }
 }
 
 // DOM
@@ -37,11 +108,20 @@ let lastLandmarks = null
 function renderPoseCards() {
   poseCardsEl.innerHTML = ''
   for (const pose of POSES) {
-    const meta = POSE_META[pose.id] ?? { icon: '💃', hint: '' }
+    const meta = POSE_META[pose.id] ?? { icon: '💃', hint: '', svg: '' }
     const card = document.createElement('div')
     card.className = 'pose-card' + (pose.id === activePoseId ? ' active' : '')
     card.dataset.id = pose.id
-    card.innerHTML = `<div class="icon">${meta.icon}</div><div class="name">${pose.name}</div><div class="hint">${meta.hint}</div>`
+    const checkpointsHtml = (pose.checkpoints ?? [])
+      .map((cp, i) => `<li>${['①','②','③'][i] ?? '·'} ${cp}</li>`)
+      .join('')
+    card.innerHTML = `
+      <div class="pose-svg">${meta.svg ?? ''}</div>
+      <div class="pose-name">${pose.name}</div>
+      <div class="pose-desc">${pose.description ?? ''}</div>
+      <ul class="pose-checkpoints">${checkpointsHtml}</ul>
+      <div class="pose-tip">📷 ${pose.tip ?? meta.hint}</div>
+    `
     card.addEventListener('click', () => selectPose(pose.id))
     poseCardsEl.appendChild(card)
   }

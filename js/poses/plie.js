@@ -13,6 +13,9 @@ export default {
   id: 'plie',
   name: '플리에',
   camera: 'front',
+  description: '턴아웃 자세를 유지하며 무릎을 발끝 방향으로 천천히 굽히는 동작. 모든 점프와 착지의 기초이며 무릎이 충분히 열리고 상체는 수직을 유지해야 한다.',
+  checkpoints: ['무릎 굽힘 각도', '무릎-발끝 정렬', '상체 수직 유지'],
+  tip: '정면 촬영 · 전신이 들어오도록 1~1.2m 높이에 카메라 고정',
 
   analyze(landmarks) {
     const required = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER,

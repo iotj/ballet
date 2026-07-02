@@ -13,6 +13,9 @@ export default {
   id: 'turnout',
   name: '턴아웃',
   camera: 'front',
+  description: '양발을 바깥쪽으로 최대한 회전시켜 180도에 가깝게 벌리는 발레의 기본 자세. 고관절부터 시작된 외회전이 무릎, 발끝까지 이어져야 하며, 억지로 발만 벌리면 부상이 생긴다.',
+  checkpoints: ['양발 외회전 각도 합산', '무릎-발끝 방향 일치', '고관절부터 정렬 유지'],
+  tip: '정면 촬영 · 발 전체와 무릎이 보이도록 허리 높이에 카메라',
 
   analyze(landmarks) {
     const required = [LM.LEFT_HEEL, LM.LEFT_FOOT, LM.RIGHT_HEEL, LM.RIGHT_FOOT,

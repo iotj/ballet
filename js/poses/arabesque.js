@@ -20,6 +20,9 @@ export default {
   id: 'arabesque',
   name: '아라베스크',
   camera: 'side',
+  description: '한쪽 다리로 서고 반대쪽 다리를 뒤로 높이 들어 올리는 발레 대표 포즈. 골반이 수평을 유지한 상태에서 후면 다리가 올라가야 하며 코어 근력과 균형 감각이 필요하다.',
+  checkpoints: ['후면 다리 높이 (45° 이상)', '골반 수평 유지', '상체 전방 경사 적절'],
+  tip: '측면 촬영 필수 · 허리 높이에서 몸의 정확한 측면(90°)에서 촬영',
 
   analyze(landmarks) {
     const baseRequired = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER,
