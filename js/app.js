@@ -136,6 +136,7 @@ function selectPose(id) {
 
 // ─── 초기화 ───
 async function init() {
+  history.replaceState({ view: 'home' }, '')
   renderPoseCards()
 
   showLoading('MediaPipe 모델 로딩 중...')
@@ -341,9 +342,11 @@ function showNotice(msg) { lmNotice.textContent = msg; lmNotice.classList.add('v
 function hideNotice()     { lmNotice.classList.remove('visible') }
 
 // ─── 물리 back 버튼 처리 ───
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', (e) => {
   if (analysisViewEl.classList.contains('active')) {
     closeAnalysis()
+    // home으로 돌아왔으므로 다시 home state replace
+    history.replaceState({ view: 'home' }, '')
   }
 })
 
