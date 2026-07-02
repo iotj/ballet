@@ -101,6 +101,7 @@ const btnSave        = document.getElementById('btn-save')
 
 let activePoseId  = POSES[0].id
 let mode          = null // 'webcam' | 'upload'
+let lastMode      = null // 분석 화면 닫은 후에도 마지막 입력 방식 기억
 let rafId         = null
 let lastLandmarks = null
 
@@ -131,7 +132,18 @@ function selectPose(id) {
   activePoseId = id
   document.querySelectorAll('.pose-card').forEach(c => c.classList.toggle('active', c.dataset.id === id))
   clearFeedback()
-  if (lastLandmarks) analyzeLandmarks(lastLandmarks)
+  if (lastLandmarks) {
+    analyzeLandmarks(lastLandmarks)
+    return
+  }
+  // 포즈 선택 화면에서 입력 방식이 이전에 선택된 경우 즉시 분석 시작
+  if (!analysisViewEl.classList.contains('active') && lastMode !== null && isReady()) {
+    if (lastMode === 'webcam') {
+      btnWebcam.click()
+    } else if (lastMode === 'upload') {
+      fileInput.click()
+    }
+  }
 }
 
 // ─── 초기화 ───
@@ -164,6 +176,7 @@ function showAnalysis() {
 async function closeAnalysis() {
   cancelAnimationFrame(rafId)
   await stopCamera()
+  lastMode = mode  // 마지막 입력 방식 기억
   mode = null
   lastLandmarks = null
   clearOverlay(overlayEl)
@@ -176,10 +189,17 @@ async function closeAnalysis() {
 }
 
 // ─── 웹캠 ───
+function setInputButtonSelected(selectedMode) {
+  btnWebcam.classList.toggle('selected', selectedMode === 'webcam')
+  btnUploadLabel.classList.toggle('selected', selectedMode === 'upload')
+}
+
 btnWebcam.addEventListener('click', async () => {
   if (!isReady()) return
   showAnalysis()
   mode = 'webcam'
+  lastMode = 'webcam'
+  setInputButtonSelected('webcam')
   webcamEl.style.display = 'block'
   uploadedImgEl.style.display = 'none'
   btnFlip.style.display = ''
@@ -226,6 +246,8 @@ fileInput.addEventListener('change', async () => {
   cancelAnimationFrame(rafId)
   await stopCamera()
   mode = 'upload'
+  lastMode = 'upload'
+  setInputButtonSelected('upload')
 
   showAnalysis()
   webcamEl.style.display = 'none'
