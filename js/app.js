@@ -5,7 +5,7 @@ import { drawOverlay, syncCanvasSize, clearOverlay } from './overlay.js'
 
 const POSE_META = {
   turnout:   { icon: '🦢', hint: '정면 촬영' },
-  arabesque: { icon: '🩰', hint: '정면 촬영' },
+  arabesque: { icon: '🩰', hint: '측면 촬영' },
   plie:      { icon: '🧘', hint: '정면 촬영' }
 }
 

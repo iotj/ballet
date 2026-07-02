@@ -1,4 +1,4 @@
-import { allVisible, landmarkVisible, scoreFromAngle, statusFromScore, horizontalAngle } from '../scorer.js'
+import { allVisible, landmarkVisible, scoreFromAngle, statusFromScore } from '../scorer.js'
 import { THRESHOLDS } from '../../data/thresholds.js'
 
 const LM = {
@@ -19,7 +19,7 @@ function legAngleFromGround(hip, ankle) {
 export default {
   id: 'arabesque',
   name: '아라베스크',
-  camera: 'front',
+  camera: 'side',
 
   analyze(landmarks) {
     const baseRequired = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER,
@@ -62,18 +62,37 @@ export default {
       : legAngle >= t.fail ? Math.round(50 + (legAngle - t.fail) / (t.warn - t.fail) * 25)
       : Math.max(0, Math.round((legAngle / t.fail) * 50))
 
-    // 어깨 수평 체크
-    const shoulderAngle = Math.abs(horizontalAngle(landmarks[LM.LEFT_SHOULDER], landmarks[LM.RIGHT_SHOULDER]))
-    const shoulderDiff  = Math.abs(shoulderAngle) // 수평에서 편차
-    const shoulderScore = scoreFromAngle(shoulderDiff, 0, THRESHOLDS.arabesque.shoulderLevel.tolerance)
+    // 골반 수평 체크 (LEFT_HIP.y와 RIGHT_HIP.y 차이)
+    const leftHip  = landmarks[LM.LEFT_HIP]
+    const rightHip = landmarks[LM.RIGHT_HIP]
+    const hipDy = Math.abs(leftHip.y - rightHip.y)
+    // 정규화 좌표 차이를 각도로 환산 (atan2 사용)
+    const hipHorizontalDiff = Math.atan2(Math.abs(leftHip.y - rightHip.y), Math.abs(leftHip.x - rightHip.x)) * (180 / Math.PI)
+    const hipScore = scoreFromAngle(hipHorizontalDiff, 0, THRESHOLDS.arabesque.hipLevel.tolerance)
 
-    const legStatus      = statusFromScore(legScore)
-    const shoulderStatus = statusFromScore(shoulderScore)
+    // 상체 전방 경사 체크 (어깨-고관절 벡터의 수직 편차)
+    const leftShoulder  = landmarks[LM.LEFT_SHOULDER]
+    const rightShoulder = landmarks[LM.RIGHT_SHOULDER]
+    const shoulderMidX = (leftShoulder.x + rightShoulder.x) / 2
+    const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2
+    const hipMidX = (leftHip.x + rightHip.x) / 2
+    const hipMidY = (leftHip.y + rightHip.y) / 2
+    // 어깨 중점 → 골반 중점 벡터와 수직(dy 기준)의 편차
+    const trunkDx = shoulderMidX - hipMidX
+    const trunkDy = shoulderMidY - hipMidY
+    // 수직선(위쪽)으로부터의 각도: 완전 수직이면 0도
+    const trunkAngle = Math.abs(Math.atan2(Math.abs(trunkDx), Math.abs(trunkDy)) * (180 / Math.PI))
+    const trunkScore = scoreFromAngle(trunkAngle, 0, THRESHOLDS.arabesque.trunkForward.tolerance)
+
+    const legStatus   = statusFromScore(legScore)
+    const hipStatus   = statusFromScore(hipScore)
+    const trunkStatus = statusFromScore(trunkScore)
 
     return {
       scores: {
         '다리 높이': legScore,
-        '어깨 수평': shoulderScore
+        '골반 수평': hipScore,
+        '상체 경사': trunkScore
       },
       comments: {
         '다리 높이': legStatus === 'pass'
@@ -81,13 +100,17 @@ export default {
           : legStatus === 'warn'
           ? `후면 다리 ${Math.round(legAngle)}°입니다. 골반을 정면으로 유지하며 조금 더 올려보세요.`
           : `후면 다리 ${Math.round(legAngle)}°입니다. 지지발 무릎을 살짝 굽혀 균형을 잡고 다리를 들어올리세요.`,
-        '어깨 수평': shoulderStatus === 'pass'
-          ? '어깨선이 수평으로 잘 유지되고 있습니다.'
-          : `어깨가 ${Math.round(shoulderDiff)}° 기울어져 있습니다. 양쪽 어깨 높이를 같게 유지하세요.`
+        '골반 수평': hipStatus === 'pass'
+          ? '골반이 수평으로 잘 유지되고 있습니다.'
+          : `골반이 ${Math.round(hipHorizontalDiff)}° 기울어져 있습니다. 양쪽 골반 높이를 같게 유지하세요.`,
+        '상체 경사': trunkStatus === 'pass'
+          ? '상체가 바르게 유지되고 있습니다.'
+          : `상체가 앞으로 ${Math.round(trunkAngle)}° 기울어져 있습니다. 시선을 앞으로 두고 상체를 세워주세요.`
       },
       status: {
         '다리 높이': legStatus,
-        '어깨 수평': shoulderStatus
+        '골반 수평': hipStatus,
+        '상체 경사': trunkStatus
       },
       raw: { legAngle: Math.round(legAngle) }
     }
