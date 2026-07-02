@@ -155,6 +155,7 @@ async function init() {
 
 // ─── 모드 전환 ───
 function showAnalysis() {
+  history.pushState({ view: 'analysis' }, '')
   poseSelectEl.style.display = 'none'
   analysisViewEl.classList.add('active')
 }
@@ -338,5 +339,12 @@ function hideLoading() { loadingEl.classList.remove('visible') }
 
 function showNotice(msg) { lmNotice.textContent = msg; lmNotice.classList.add('visible') }
 function hideNotice()     { lmNotice.classList.remove('visible') }
+
+// ─── 물리 back 버튼 처리 ───
+window.addEventListener('popstate', () => {
+  if (analysisViewEl.classList.contains('active')) {
+    closeAnalysis()
+  }
+})
 
 init()
