@@ -128,6 +128,7 @@ function requestVideoLoop() {
 
 // ─── 사진 업로드 ───
 fileInput.addEventListener('change', async () => {
+  clearFeedback()
   const file = fileInput.files[0]
   if (!file || !isReady()) return
   fileInput.value = ''

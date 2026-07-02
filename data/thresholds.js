@@ -8,7 +8,7 @@ export const THRESHOLDS = {
     shoulderLevel: { tolerance: 8 }             // 어깨 수평 허용 편차 (도)
   },
   plie: {
-    kneeAlign: { tolerance: 12 },  // 무릎-발끝 X축 정렬 허용 편차 (도)
+    kneeAlign: { tolerance: 12 },  // 무릎-발끝 X축 정렬 허용 편차 (정규화 좌표 *100 단위, 0~100 범위)
     trunkVertical: { tolerance: 8 } // 상체 수직 허용 편차 (도)
   }
 }

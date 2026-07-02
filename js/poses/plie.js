@@ -43,11 +43,13 @@ export default {
     const leftAlignOk  = (leftKneeX  <= leftAnkleX  + 0.02) // 왼쪽은 무릎이 왼쪽으로
     const rightAlignOk = (rightKneeX >= rightAnkleX - 0.02) // 오른쪽은 무릎이 오른쪽으로
 
-    // 무릎과 발 사이 수평 거리 비율로 점수 계산
+    // 무릎과 발 사이 수평 거리 비율로 점수 계산 (정규화 좌표 *100 단위)
     const leftDiff  = Math.abs(leftKneeX  - leftFootX)  * 100
     const rightDiff = Math.abs(rightKneeX - rightFootX) * 100
     const tolerance = THRESHOLDS.plie.kneeAlign.tolerance
-    const alignScore = scoreFromAngle(Math.max(leftDiff, rightDiff), 0, tolerance)
+    // 방향 불일치(무릎이 안쪽으로 모임) 시 패널티 적용
+    const directionPenalty = (!leftAlignOk ? 20 : 0) + (!rightAlignOk ? 20 : 0)
+    const alignScore = Math.max(0, scoreFromAngle(Math.max(leftDiff, rightDiff), 0, tolerance) - directionPenalty)
 
     // 상체 수직 정렬 (어깨 중점 - 골반 중점 수직선)
     const shoulderMid = {
