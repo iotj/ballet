@@ -39,8 +39,10 @@ export default {
     // 무릎-발끝 정렬 (무릎이 발끝 방향을 향하는지)
     const leftKneeAngle  = vectorAngle(landmarks[LM.LEFT_ANKLE],  landmarks[LM.LEFT_KNEE])
     const rightKneeAngle = vectorAngle(landmarks[LM.RIGHT_ANKLE], landmarks[LM.RIGHT_KNEE])
-    const leftAlignDiff  = Math.abs(leftKneeAngle  - leftFootAngle)
-    const rightAlignDiff = Math.abs(rightKneeAngle - rightFootAngle)
+    let leftAlignDiff  = Math.abs(leftKneeAngle  - leftFootAngle)
+    if (leftAlignDiff  > 180) leftAlignDiff  = 360 - leftAlignDiff
+    let rightAlignDiff = Math.abs(rightKneeAngle - rightFootAngle)
+    if (rightAlignDiff > 180) rightAlignDiff = 360 - rightAlignDiff
     const alignDiff = Math.max(leftAlignDiff, rightAlignDiff)
     const alignTolerance = THRESHOLDS.turnout.kneeAlign.tolerance
     const alignScore = scoreFromAngle(alignDiff, 0, alignTolerance)
