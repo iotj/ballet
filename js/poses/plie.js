@@ -91,7 +91,8 @@ export default {
         '무릎 굽힘': kneeBendStatus,
         '무릎 정렬': alignStatus,
         '상체 수직': trunkStatus
-      }
+      },
+      raw: { avgKneeBend: Math.round(avgKneeBend) } // 시퀀스 모드의 굽힘 하한 판정에 사용
     }
   }
 }

@@ -47,6 +47,39 @@ main { flex: 1; padding: 20px; max-width: 600px; margin: 0 auto; width: 100%; }
 .input-buttons { display: flex; gap: 10px; }
 .input-buttons .btn.selected { background: var(--accent); border-color: var(--accent); color: #0f0a1e; }
 
+/* ─── 시퀀스 연습 (홈) ─── */
+#sequence-section { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.sequence-cards { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.sequence-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: pointer; transition: border-color 0.15s, transform 0.1s; user-select: none; }
+.sequence-card:hover { border-color: var(--accent2); transform: translateY(-2px); }
+.sequence-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.sequence-desc { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.sequence-steps { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+.sequence-hint { font-size: 11px; color: var(--muted); font-style: italic; }
+.sequence-note { font-size: 11px; color: var(--muted); }
+
+/* ─── 시퀀스 패널 (분석 화면) ─── */
+#sequence-panel { background: var(--surface); border: 1.5px solid var(--accent); border-radius: var(--radius); padding: 14px 16px; }
+.seq-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.seq-progress { font-size: 12px; font-weight: 700; color: var(--accent); background: rgba(167,139,250,0.15); padding: 2px 8px; border-radius: 99px; }
+.seq-step-name { font-size: 15px; font-weight: 700; }
+.seq-body { display: flex; gap: 14px; align-items: center; }
+.seq-svg svg { width: 56px; height: 84px; }
+.seq-info { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.seq-msg { font-size: 13px; font-weight: 600; }
+.seq-msg.pass { color: var(--pass); }
+.seq-msg.hold { color: var(--accent); }
+.seq-msg.broken { color: var(--warn); }
+.seq-sub-msg { font-size: 12px; color: var(--muted); min-height: 1em; }
+.seq-hold-wrap { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.seq-hold-bar { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.1s linear; }
+#seq-complete { text-align: center; display: flex; flex-direction: column; gap: 10px; }
+#seq-complete[hidden] { display: none; }
+.seq-complete-title { font-size: 17px; font-weight: 700; color: var(--pass); }
+.seq-complete-sub { font-size: 12px; color: var(--muted); }
+#seq-times { list-style: none; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+#seq-complete .btn { align-self: center; flex: none; padding: 10px 24px; }
+
 /* ─── 버튼 ─── */
 .btn { flex: 1; padding: 12px 16px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s, border-color 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .btn:hover { background: #1e1545; border-color: var(--accent); }

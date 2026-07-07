@@ -1,4 +1,6 @@
 import { POSES } from './poseRegistry.js'
+import { SEQUENCES } from '../data/sequences.js'
+import { createSequenceSession } from './sequence.js'
 import { initMediaPipe, detectImage, detectVideo, isReady } from './mediapipe.js'
 import { startCamera, stopCamera, toggleFacing, loadImageFile } from './camera.js'
 import { drawOverlay, syncCanvasSize, clearOverlay } from './overlay.js'
@@ -99,11 +101,30 @@ const btnFlip        = document.getElementById('btn-flip')
 const btnClose       = document.getElementById('btn-close')
 const btnSave        = document.getElementById('btn-save')
 
+// 시퀀스 패널 DOM
+const sequenceCardsEl = document.getElementById('sequence-cards')
+const sequencePanelEl = document.getElementById('sequence-panel')
+const seqStepAreaEl   = document.getElementById('seq-step-area')
+const seqProgressEl   = document.getElementById('seq-progress')
+const seqStepNameEl   = document.getElementById('seq-step-name')
+const seqSvgEl        = document.getElementById('seq-svg')
+const seqMsgEl        = document.getElementById('seq-msg')
+const seqSubMsgEl     = document.getElementById('seq-sub-msg')
+const seqHoldBarEl    = document.getElementById('seq-hold-bar')
+const seqCompleteEl   = document.getElementById('seq-complete')
+const seqTimesEl      = document.getElementById('seq-times')
+const btnSeqRetry     = document.getElementById('btn-seq-retry')
+
 let activePoseId  = POSES[0].id
 let mode          = null // 'webcam' | 'upload'
 let lastMode      = null // 분석 화면 닫은 후에도 마지막 입력 방식 기억
 let rafId         = null
 let lastLandmarks = null
+
+// 시퀀스 모드 상태
+let sequenceSession    = null // createSequenceSession 반환 객체 (null이면 단일 포즈 모드)
+let activeSequence     = null
+let seqCompleteShown   = false // 완료 화면 1회 렌더 가드
 
 // ─── 포즈 카드 렌더링 ───
 function renderPoseCards() {
@@ -146,10 +167,32 @@ function selectPose(id) {
   }
 }
 
+// ─── 시퀀스 카드 렌더링 ───
+function renderSequenceCards() {
+  sequenceCardsEl.innerHTML = ''
+  for (const seq of SEQUENCES) {
+    const stepNames = seq.steps
+      .map(s => POSES.find(p => p.id === s.poseId)?.name ?? s.poseId)
+      .join(' → ')
+    const card = document.createElement('div')
+    card.className = 'sequence-card'
+    card.dataset.id = seq.id
+    card.innerHTML = `
+      <div class="sequence-name">🔁 ${seq.name}</div>
+      <div class="sequence-desc">${seq.description ?? ''}</div>
+      <div class="sequence-steps">${stepNames}</div>
+      <div class="sequence-hint">📹 웹캠 전용 · ${seq.steps.length}단계</div>
+    `
+    card.addEventListener('click', () => startSequence(seq))
+    sequenceCardsEl.appendChild(card)
+  }
+}
+
 // ─── 초기화 ───
 async function init() {
   history.replaceState({ view: 'home' }, '')
   renderPoseCards()
+  renderSequenceCards()
 
   showLoading('MediaPipe 모델 로딩 중...')
   try {
@@ -176,9 +219,14 @@ function showAnalysis() {
 async function closeAnalysis() {
   cancelAnimationFrame(rafId)
   await stopCamera()
-  lastMode = mode  // 마지막 입력 방식 기억
+  if (!activeSequence) lastMode = mode  // 마지막 입력 방식 기억 (시퀀스 모드는 제외)
   mode = null
   lastLandmarks = null
+  // 시퀀스 모드 상태 정리
+  sequenceSession = null
+  activeSequence = null
+  seqCompleteShown = false
+  sequencePanelEl.style.display = 'none'
   clearOverlay(overlayEl)
   clearFeedback()
   hideNotice()
@@ -219,14 +267,121 @@ function requestVideoLoop() {
     if (mode !== 'webcam') return
     syncCanvasSize(overlayEl, webcamEl)
     const lm = await detectVideo(webcamEl)
+    let result = null
     if (lm) {
       lastLandmarks = lm
-      analyzeLandmarks(lm)
+      result = analyzeLandmarks(lm)
     }
+    // 시퀀스 모드: 분석 프레임이 없어도 매 프레임 상태 갱신 (전환 카운트다운 등)
+    if (sequenceSession) updateSequence(result)
     rafId = requestAnimationFrame(loop)
   }
   rafId = requestAnimationFrame(loop)
 }
+
+// ─── 시퀀스 모드 ───
+async function startSequence(seq) {
+  if (!isReady()) return
+  activeSequence = seq
+  sequenceSession = createSequenceSession(seq)
+  seqCompleteShown = false
+  activePoseId = seq.steps[0].poseId
+
+  showAnalysis()
+  mode = 'webcam' // 시퀀스 모드는 웹캠 전용
+  webcamEl.style.display = 'block'
+  uploadedImgEl.style.display = 'none'
+  btnFlip.style.display = ''
+  sequencePanelEl.style.display = ''
+  seqStepAreaEl.style.display = ''
+  seqCompleteEl.hidden = true
+  updateSequence(null) // 카메라 준비 전에도 첫 스텝 안내 표시
+
+  try {
+    await startCamera(webcamEl)
+  } catch (e) {
+    showNotice('카메라를 사용할 수 없습니다: ' + e.message)
+    return
+  }
+  requestVideoLoop()
+}
+
+function updateSequence(result) {
+  const state = sequenceSession.update(result, performance.now())
+  // 스텝 전환 시 분석 대상 포즈 갱신 → 기존 분석 파이프라인 재사용
+  if (state.poseId !== activePoseId) {
+    activePoseId = state.poseId
+    clearFeedback()
+  }
+  renderSequencePanel(state)
+}
+
+// 받침 유무에 따라 주격 조사 선택
+function withSubjectParticle(word) {
+  const code = word.charCodeAt(word.length - 1)
+  if (code < 0xac00 || code > 0xd7a3) return word + '이(가)'
+  return word + ((code - 0xac00) % 28 ? '이' : '가')
+}
+
+function renderSequencePanel(state) {
+  if (state.phase === 'complete') {
+    if (seqCompleteShown) return
+    seqCompleteShown = true
+    seqStepAreaEl.style.display = 'none'
+    seqCompleteEl.hidden = false
+    seqTimesEl.innerHTML = ''
+    state.stepTimes.forEach((t, i) => {
+      const poseId = activeSequence.steps[i].poseId
+      const pose = POSES.find(p => p.id === poseId)
+      const li = document.createElement('li')
+      li.textContent = `${i + 1}. ${pose?.name ?? poseId} — ${t}초`
+      seqTimesEl.appendChild(li)
+    })
+    return
+  }
+
+  seqCompleteShown = false
+  seqCompleteEl.hidden = true
+  seqStepAreaEl.style.display = ''
+
+  const pose = POSES.find(p => p.id === state.poseId)
+  const poseName = pose?.name ?? state.poseId
+  seqProgressEl.textContent = `${state.stepIndex + 1}/${state.totalSteps}`
+  seqStepNameEl.textContent = poseName
+  if (seqSvgEl.dataset.poseId !== state.poseId) {
+    seqSvgEl.dataset.poseId = state.poseId
+    seqSvgEl.innerHTML = POSE_META[state.poseId]?.svg ?? ''
+  }
+  seqHoldBarEl.style.width = `${Math.round(state.holdProgress * 100)}%`
+
+  if (state.phase === 'transition') {
+    seqMsgEl.textContent = `✅ 통과! 다음 동작 준비 (${state.transitionRemainSec})`
+    seqMsgEl.className = 'seq-msg pass'
+    seqSubMsgEl.textContent = `다음 동작: ${poseName} — ${state.stepHint}`
+  } else if (state.phase === 'holding') {
+    seqMsgEl.textContent = `좋아요, 그대로 ${state.holdRemainSec}초…`
+    seqMsgEl.className = 'seq-msg hold'
+    seqSubMsgEl.textContent = ''
+  } else if (state.brokenKey) {
+    seqMsgEl.textContent = `${withSubjectParticle(state.brokenKey)} 흐트러졌어요 — 다시 잡아볼까요?`
+    seqMsgEl.className = 'seq-msg broken'
+    seqSubMsgEl.textContent = `${state.stepIndex + 1}번 동작: ${poseName} — ${state.stepHint}`
+  } else {
+    seqMsgEl.textContent = `${state.stepIndex + 1}번 동작: ${poseName} — ${state.stepHint}`
+    seqMsgEl.className = 'seq-msg'
+    seqSubMsgEl.textContent = ''
+  }
+}
+
+btnSeqRetry.addEventListener('click', () => {
+  if (!sequenceSession) return
+  sequenceSession.reset()
+  seqCompleteShown = false
+  seqCompleteEl.hidden = true
+  seqStepAreaEl.style.display = ''
+  activePoseId = activeSequence.steps[0].poseId
+  clearFeedback()
+})
 
 // ─── 사진 업로드 ───
 fileInput.addEventListener('change', async () => {
@@ -274,7 +429,7 @@ fileInput.addEventListener('change', async () => {
 // ─── 분석 ───
 function analyzeLandmarks(landmarks) {
   const pose = POSES.find(p => p.id === activePoseId)
-  if (!pose) return
+  if (!pose) return null
 
   const result = pose.analyze(landmarks)
 
@@ -282,12 +437,13 @@ function analyzeLandmarks(landmarks) {
     showNotice(result.error)
     clearFeedback()
     drawOverlay(overlayEl, landmarks, {})
-    return
+    return result
   }
 
   hideNotice()
   drawOverlay(overlayEl, landmarks, result.status)
   renderFeedback(result)
+  return result
 }
 
 // ─── 피드백 렌더링 ───
