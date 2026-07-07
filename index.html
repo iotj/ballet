@@ -36,6 +36,13 @@
           </label>
         </div>
       </div>
+
+      <!-- ③ 시퀀스 연습 -->
+      <div id="sequence-section">
+        <p class="section-label">🔁 시퀀스 연습</p>
+        <div class="sequence-cards" id="sequence-cards"></div>
+        <p class="sequence-note">실제 플리에는 멈추지 않고 이어지는 동작입니다. 이 모드는 순서 암기용 연습입니다.</p>
+      </div>
     </section>
 
     <!-- ③ 분석 화면 -->
@@ -51,6 +58,30 @@
           <button class="btn icon-btn danger" id="btn-close" title="닫기">✕</button>
         </div>
         <div class="notice" id="lm-notice"></div>
+      </div>
+
+      <!-- 시퀀스 패널 (시퀀스 모드에서만 표시) -->
+      <div id="sequence-panel" style="display:none">
+        <div id="seq-step-area">
+          <div class="seq-header">
+            <span class="seq-progress" id="seq-progress"></span>
+            <span class="seq-step-name" id="seq-step-name"></span>
+          </div>
+          <div class="seq-body">
+            <div class="seq-svg" id="seq-svg"></div>
+            <div class="seq-info">
+              <p class="seq-msg" id="seq-msg"></p>
+              <div class="seq-hold-wrap"><div class="seq-hold-bar" id="seq-hold-bar"></div></div>
+              <p class="seq-sub-msg" id="seq-sub-msg"></p>
+            </div>
+          </div>
+        </div>
+        <div id="seq-complete" hidden>
+          <p class="seq-complete-title">시퀀스 완료! 🎉</p>
+          <p class="seq-complete-sub">순서를 몸이 기억할 때까지 반복해 보세요</p>
+          <ul id="seq-times"></ul>
+          <button class="btn primary" id="btn-seq-retry">🔁 다시 하기</button>
+        </div>
       </div>
 
       <!-- 피드백 패널 -->
