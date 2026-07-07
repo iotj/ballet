@@ -1,17 +1,21 @@
-const CACHE = 'ballet-v1'
+const CACHE = 'ballet-v2'
 const SHELL = [
   '/ballet/',
   '/ballet/index.html',
   '/ballet/style.css',
+  '/ballet/manifest.json',
+  '/ballet/js/app.js',
   '/ballet/js/mediapipe.js',
   '/ballet/js/camera.js',
   '/ballet/js/overlay.js',
   '/ballet/js/scorer.js',
   '/ballet/js/poseRegistry.js',
+  '/ballet/js/sequence.js',
   '/ballet/js/poses/turnout.js',
   '/ballet/js/poses/arabesque.js',
   '/ballet/js/poses/plie.js',
-  '/ballet/data/thresholds.js'
+  '/ballet/data/thresholds.js',
+  '/ballet/data/sequences.js'
 ]
 
 self.addEventListener('install', e => {
