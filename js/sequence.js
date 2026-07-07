@@ -94,9 +94,11 @@ export function createSequenceSession(sequence) {
     }
 
     // ─── analyzing / holding ───
+    let frameMet = false // 이번 프레임이 통과 상태인지 (hold 완료 확정은 통과 프레임에서만)
     if (analysisResult && !analysisResult.error) {
       const fails = getFailKeys(currentStep().poseId, analysisResult)
       if (fails.length === 0) {
+        frameMet = true
         if (holdStartMs === null) holdStartMs = nowMs
         lastMetMs = nowMs
         phase = 'holding'
@@ -115,8 +117,8 @@ export function createSequenceSession(sequence) {
       pendingBreakKey = null
     }
 
-    // hold 완료 판정
-    if (phase === 'holding' && nowMs - holdStartMs >= holdMsOf(currentStep())) {
+    // hold 완료 판정 — grace는 hold 진행 유지용일 뿐, 완료 확정은 통과 프레임에서만 (무너진 자세 인증 방지)
+    if (phase === 'holding' && frameMet && nowMs - holdStartMs >= holdMsOf(currentStep())) {
       passStep(nowMs)
     }
 

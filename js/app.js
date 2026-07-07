@@ -266,11 +266,15 @@ function requestVideoLoop() {
   async function loop() {
     if (mode !== 'webcam') return
     syncCanvasSize(overlayEl, webcamEl)
-    const lm = await detectVideo(webcamEl)
+    // 시퀀스 완료 후에는 감지/분석 스킵 (배터리 절약) — 카메라는 '다시 하기' 대비 유지
+    const seqComplete = sequenceSession?.getProgress().phase === 'complete'
     let result = null
-    if (lm) {
-      lastLandmarks = lm
-      result = analyzeLandmarks(lm)
+    if (!seqComplete) {
+      const lm = await detectVideo(webcamEl)
+      if (lm) {
+        lastLandmarks = lm
+        result = analyzeLandmarks(lm)
+      }
     }
     // 시퀀스 모드: 분석 프레임이 없어도 매 프레임 상태 갱신 (전환 카운트다운 등)
     if (sequenceSession) updateSequence(result)
